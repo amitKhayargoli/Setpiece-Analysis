@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1050 680" width="1050" height="680">
+  <defs>
+    <clipPath id="clip-pitch">
+      <rect x="105" y="68" width="840" height="544" rx="0" ry="0" />
+    </clipPath>
+  </defs>
+
+  <rect x="0" y="0" width="1050" height="680" fill="#2f7f35" />
+
+  <g clip-path="url(#clip-pitch)">
+    <rect x="105" y="68" width="840" height="544" fill="#3f8d38" />
+    <rect x="105" y="68" width="70" height="544" fill="#336f2f" />
+    <rect x="245" y="68" width="70" height="544" fill="#336f2f" />
+    <rect x="385" y="68" width="70" height="544" fill="#336f2f" />
+    <rect x="525" y="68" width="70" height="544" fill="#336f2f" />
+    <rect x="665" y="68" width="70" height="544" fill="#336f2f" />
+    <rect x="805" y="68" width="70" height="544" fill="#336f2f" />
+  </g>
+
+  <rect x="105" y="68" width="840" height="544" fill="none" stroke="#f3f3f3" stroke-width="6" />
+  <line x1="525" y1="68" x2="525" y2="612" stroke="#f3f3f3" stroke-width="6" />
+  <circle cx="525" cy="340" r="73.2" fill="none" stroke="#f3f3f3" stroke-width="6" />
+  <circle cx="525" cy="340" r="4.5" fill="#f3f3f3" />
+
+  <rect x="105" y="179.72" width="132" height="322.56" fill="none" stroke="#f3f3f3" stroke-width="6" />
+  <rect x="105" y="266.72" width="44" height="146.56" fill="none" stroke="#f3f3f3" stroke-width="6" />
+  <circle cx="193" cy="340" r="4.5" fill="#f3f3f3" />
+
+  <rect x="813" y="179.72" width="132" height="322.56" fill="none" stroke="#f3f3f3" stroke-width="6" />
+  <rect x="901" y="266.72" width="44" height="146.56" fill="none" stroke="#f3f3f3" stroke-width="6" />
+  <circle cx="857" cy="340" r="4.5" fill="#f3f3f3" />
+
+  <path d="M 105 76 A 8 8 0 0 1 113 68" fill="none" stroke="#f3f3f3" stroke-width="6" />
+  <path d="M 937 68 A 8 8 0 0 1 945 76" fill="none" stroke="#f3f3f3" stroke-width="6" />
+  <path d="M 105 604 A 8 8 0 0 0 113 612" fill="none" stroke="#f3f3f3" stroke-width="6" />
+  <path d="M 937 612 A 8 8 0 0 0 945 604" fill="none" stroke="#f3f3f3" stroke-width="6" />
+
+  <rect x="100" y="63" width="850" height="554" fill="none" stroke="#0f8d63" stroke-width="6" rx="8" ry="8" />
+</svg>
