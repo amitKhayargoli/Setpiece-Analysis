@@ -125,15 +125,18 @@ export function PitchVisualization({
   // ── 3. Redraw when setPiece changes ──────────────────────────────────────
   useEffect(() => {
     const draw = () => {
-      if (!pixiReadyRef.current || !graphicsRef.current || !appRef.current) return;
-      
+      if (!pixiReadyRef.current || !graphicsRef.current || !appRef.current)
+        return;
+
       const app = appRef.current;
       const graphics = graphicsRef.current;
-      
+
       graphics.clear();
-      
+
       // Remove previous ball sprites
-      app.stage.children.filter(c => c instanceof PIXI.Sprite).forEach(c => c.destroy());
+      app.stage.children
+        .filter((c) => c instanceof PIXI.Sprite)
+        .forEach((c) => c.destroy());
 
       if (setPiece) {
         drawSetPiece(graphics, setPiece, ballTextureRef.current, app.stage);
@@ -215,10 +218,10 @@ export function PitchVisualization({
 }
 
 function drawSetPiece(
-  g: PIXI.Graphics, 
-  sp: SetPiece, 
+  g: PIXI.Graphics,
+  sp: SetPiece,
   ballTexture: PIXI.Texture | null,
-  stage: PIXI.Container
+  stage: PIXI.Container,
 ) {
   const isCorner = sp.type.toLowerCase() === "corner";
   const isPenalty =
@@ -258,39 +261,61 @@ function drawSetPiece(
     let finalEndX = sp.endX;
     let finalEndY = sp.endY;
 
-    // Fix for Penalty/Shot coordinates:
-    // If the event is a goal/shot and endX is very close to startX (vertical line),
-    // it's often because the coordinates in the data are normalized for a vertical pitch
-    // where X is the width and Y is the length.
+    // ── Fix penalty vertical bug (keep your logic) ──
     if (
       isPenalty &&
       Math.abs(sp.endX - startPoint.x) < 2 &&
       Math.abs(sp.endY - startPoint.y) > 5
     ) {
-      // Swap coordinates or adjust based on goal position
-      // For a penalty at the right side (x=89.5), the goal is at x=100.
       finalEndX = startPoint.x >= 50 ? 100 : 0;
-      finalEndY = sp.endY; // The data's Y is often the horizontal position on the goal line
+      finalEndY = sp.endY;
     }
 
-    const endX = mapX(finalEndX);
-    const endY = mapY(finalEndY);
+    const endPX = mapX(finalEndX);
+    const endPY = mapY(finalEndY);
 
+    // ── 🎯 BEZIER CONTROL POINT (the magic) ──
+
+    const dx = endPX - startX;
+    const dy = endPY - startY;
+
+    // Midpoint
+    let cx = (startX + endPX) / 2;
+    let cy = (startY + endPY) / 2;
+
+    // Perpendicular offset (creates curve)
+    const length = Math.sqrt(dx * dx + dy * dy) || 1;
+
+    // Normal vector (perpendicular direction)
+    const nx = -dy / length;
+    const ny = dx / length;
+
+    // Curve strength (tune this)
+    const curveStrength = Math.min(20, length * 0.25);
+
+    // Randomize direction slightly for realism
+    const direction = Math.random() > 0.5 ? 1 : -1;
+
+    cx += nx * curveStrength * direction;
+    cy += ny * curveStrength * direction;
+
+    // ── Draw curve ──
     g.setStrokeStyle({
       width: 3,
       color: sp.isGoal
         ? 0x00ff00
         : sp.outcomeType === "successful"
           ? 0x00aaff
-          : 0xff0000,
-      alpha: 0.8,
+          : 0xffffff,
+      alpha: 0.85,
     });
+
     g.moveTo(startX, startY);
-    g.lineTo(endX, endY);
+    g.quadraticCurveTo(cx, cy, endPX, endPY);
     g.stroke();
 
-    // End marker
-    g.circle(endX, endY, 5);
+    // ── End marker ──
+    g.circle(endPX, endPY, 5);
     g.fill({ color: sp.isGoal ? 0x00ff00 : 0xff0000 });
   }
 
