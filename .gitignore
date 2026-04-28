@@ -46,4 +46,5 @@ next-env.d.ts
 .next
 prisma
 .kilocode
-
+CLAUDE.md
+AGENTS.md
