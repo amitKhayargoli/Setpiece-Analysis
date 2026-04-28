@@ -38,6 +38,7 @@ export function PitchVisualization({
   // Track PIXI readiness with a ref (not state) — never triggers a re-render
   const appRef = useRef<PIXI.Application | null>(null);
   const graphicsRef = useRef<PIXI.Graphics | null>(null);
+  const ballTextureRef = useRef<PIXI.Texture | null>(null);
   const pixiReadyRef = useRef(false);
 
   const [setPiece, setSetPiece] = useState<SetPiece | null>(null);
@@ -69,6 +70,14 @@ export function PitchVisualization({
 
       appRef.current = app;
       pixiReadyRef.current = true;
+
+      // Load ball texture
+      try {
+        const texture = await PIXI.Assets.load("/Soccerball.svg");
+        ballTextureRef.current = texture;
+      } catch (err) {
+        console.error("Failed to load ball texture:", err);
+      }
 
       const graphics = new PIXI.Graphics();
       app.stage.addChild(graphics);
@@ -116,9 +125,19 @@ export function PitchVisualization({
   // ── 3. Redraw when setPiece changes ──────────────────────────────────────
   useEffect(() => {
     const draw = () => {
-      if (!pixiReadyRef.current || !graphicsRef.current) return;
-      graphicsRef.current.clear();
-      if (setPiece) drawSetPiece(graphicsRef.current, setPiece);
+      if (!pixiReadyRef.current || !graphicsRef.current || !appRef.current) return;
+      
+      const app = appRef.current;
+      const graphics = graphicsRef.current;
+      
+      graphics.clear();
+      
+      // Remove previous ball sprites
+      app.stage.children.filter(c => c instanceof PIXI.Sprite).forEach(c => c.destroy());
+
+      if (setPiece) {
+        drawSetPiece(graphics, setPiece, ballTextureRef.current, app.stage);
+      }
     };
 
     if (pixiReadyRef.current) {
@@ -132,9 +151,9 @@ export function PitchVisualization({
 
   return (
     <div className="flex flex-col items-center gap-4 w-full h-full justify-center">
-      <div className="w-full max-w-[1700px] aspect-[105/68] rounded-lg shadow-2xl overflow-hidden relative border-4 border-white/20">
+      <div className="w-full max-w-[1700px] aspect-[105/68] overflow-hidden relative border-4 border-white/20">
         <img
-          src="/pitch-custom.svg"
+          src="/pitch.svg"
           alt="Football Pitch"
           className="absolute inset-0 w-full h-full pointer-events-none"
           style={{ objectFit: "fill" }}
@@ -195,7 +214,12 @@ export function PitchVisualization({
   );
 }
 
-function drawSetPiece(g: PIXI.Graphics, sp: SetPiece) {
+function drawSetPiece(
+  g: PIXI.Graphics, 
+  sp: SetPiece, 
+  ballTexture: PIXI.Texture | null,
+  stage: PIXI.Container
+) {
   const isCorner = sp.type.toLowerCase() === "corner";
   const isPenalty =
     sp.type.toLowerCase() === "penalty" ||
@@ -215,9 +239,20 @@ function drawSetPiece(g: PIXI.Graphics, sp: SetPiece) {
   const startX = mapX(startPoint.x);
   const startY = mapY(startPoint.y);
 
-  // Start marker (yellow)
-  g.circle(startX, startY, isCorner || isPenalty ? 4 : 6);
-  g.fill({ color: 0xffff00 });
+  // Use Soccerball sprite if available, otherwise fallback to circle
+  if (ballTexture) {
+    const ball = new PIXI.Sprite(ballTexture);
+    ball.anchor.set(0.5);
+    ball.position.set(startX, startY);
+    const ballSize = isCorner || isPenalty ? 12 : 16;
+    ball.width = ballSize;
+    ball.height = ballSize;
+    stage.addChild(ball);
+  } else {
+    // Start marker (yellow) fallback
+    g.circle(startX, startY, isCorner || isPenalty ? 4 : 6);
+    g.fill({ color: 0xffff00 });
+  }
 
   if (sp.endX !== null && sp.endY !== null) {
     let finalEndX = sp.endX;
@@ -227,7 +262,11 @@ function drawSetPiece(g: PIXI.Graphics, sp: SetPiece) {
     // If the event is a goal/shot and endX is very close to startX (vertical line),
     // it's often because the coordinates in the data are normalized for a vertical pitch
     // where X is the width and Y is the length.
-    if (isPenalty && Math.abs(sp.endX - startPoint.x) < 2 && Math.abs(sp.endY - startPoint.y) > 5) {
+    if (
+      isPenalty &&
+      Math.abs(sp.endX - startPoint.x) < 2 &&
+      Math.abs(sp.endY - startPoint.y) > 5
+    ) {
       // Swap coordinates or adjust based on goal position
       // For a penalty at the right side (x=89.5), the goal is at x=100.
       finalEndX = startPoint.x >= 50 ? 100 : 0;
